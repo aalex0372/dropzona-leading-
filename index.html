@@ -80,6 +80,7 @@ nav.scrolled{background:rgba(6,6,11,.75);backdrop-filter:blur(24px) saturate(180
 .hero-badge i{width:12px;height:12px}
 h1{font-family:var(--f-d);font-size:clamp(32px,5.5vw,64px);font-weight:800;line-height:1.1;color:var(--t0);margin-bottom:20px}
 .h1-acc{background:linear-gradient(135deg,var(--ac),#c084fc,var(--cy));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-h1-m{display:none}
 .hero-sub{font-size:17px;color:var(--t2);max-width:520px;margin:0 auto 36px;line-height:1.7;animation:fu .6s ease .2s both}
 .hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:48px;animation:fu .6s ease .3s both}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:10px;font-family:var(--f-b);font-weight:600;cursor:pointer;transition:all .25s cubic-bezier(.4,0,.2,1);text-decoration:none}
@@ -250,6 +251,8 @@ footer{position:relative;z-index:2;border-top:none;padding:16px 28px;background:
   .nav-in{padding:0;width:100%;max-width:100%;justify-content:space-between;gap:0;min-width:0}
   .brand{gap:8px;min-width:0;margin-right:12px}
   .nav-r{gap:8px;flex-shrink:0;padding-left:12px;border-left:1px solid var(--br1);margin-left:auto}
+  .hero-h1-d{display:none!important}
+  .hero-h1-m{display:block!important}
 }
 @media(max-width:480px){
   .nav-in{padding:0;max-width:100%}
@@ -315,8 +318,10 @@ footer{position:relative;z-index:2;border-top:none;padding:16px 28px;background:
   <div>
     <div class="hero-badge"><i data-lucide="sparkles" aria-hidden="true"></i><span>Closed Beta — Boost Your Stream</span></div>
     <h1 id="hero-heading">
-      <span style="display:block;animation:fu .6s ease .1s both">Twitch Drops for skill</span>
-      <span class="h1-acc" style="display:block;animation:fu .6s ease .2s both">moments and highlights.</span>
+      <span class="hero-h1-d" style="display:block;animation:fu .6s ease .1s both">Twitch Drops for skill</span>
+      <span class="h1-acc hero-h1-d" style="display:block;animation:fu .6s ease .2s both">moments and highlights.</span>
+      <span class="hero-h1-m" style="display:block;animation:fu .6s ease .1s both">Twitch Drops for</span>
+      <span class="h1-acc hero-h1-m" style="display:block;animation:fu .6s ease .2s both">skill moments and highlights.</span>
     </h1>
     <p class="hero-sub">Automated drops for stream highlights. CS2 goes first — more games & event types coming. Powered by the streamer's own inventory.</p>
     <div class="hero-ctas">
