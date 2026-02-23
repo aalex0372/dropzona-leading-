@@ -1,36 +1,24 @@
 # DROPZONE
 
-Landing page for the **DROPZONE** closed beta — a platform that automatically drops real CS2 skins to viewers when a streamer hits a skill moment (ACE, Triple Kill, Clutch).
+Landing page for **DROPZONE** — real-time stream drops for skill moments and highlights. Twitch Drops meets CS2 (and more games later); powered by the streamer’s own inventory.
 
-**Single-file setup:** one `index.html`, no framework, no build step.
-
----
-
-## Contents
-
-- [What's on the page](#whats-on-the-page)
-- [Quick start](#quick-start)
-- [Add your video](#add-your-video)
-- [Connect email signups](#connect-email-signups)
-- [Discord & Telegram](#discord--telegram)
-- [Deploy](#deploy)
-- [Customize](#customize)
+**Single-file setup:** one `index.html`, no framework, no build step. Responsive for desktop and all phone sizes and orientations.
 
 ---
 
-## What's on the page
+## What’s on the page
 
 | Section | Description |
 |--------|-------------|
-| **Hero** | Headline, subline, two CTAs (streamer beta + viewer waitlist) |
-| **Demo video** | Autoplay-on-click player |
-| **How it works** | 3-step explainer: Trigger → Winner → Trade |
-| **Trust & Safety** | “This is not gambling” + provable fairness |
-| **Signup forms** | Streamer beta application + viewer waitlist (email → localStorage by default; swap for your backend when ready) |
-| **Discord CTA** | Invite link to community |
-| **Footer** | Links and credits |
-
-Translations live in `translations.js`; the page uses it for copy if you add locales.
+| **Hero** | “Closed Beta” badge, headline “Twitch Drops for skill moments and highlights.”, subline, two CTAs (Streamer — Join Beta / Viewer — Get Notified), stats (Free, &lt;3s, Yours) |
+| **Demo video** | 16:9 player; `assets/demo.mp4` autoplays muted loop; click to unmute/play |
+| **How it works** | 3 steps: Trigger Fires → Winner Picked → Skin Traded |
+| **Trust & Safety** | “This is NOT gambling” — no purchase, streamer’s inventory, provably fair selection |
+| **Join CTA** | Discord + Telegram buttons, then two signup cards |
+| **Streamer Beta** | Twitch channel + email → Supabase `signups` (role: streamer) |
+| **Viewer Waitlist** | Name + email → Supabase `signups` (role: viewer) |
+| **Footer** | © DROPZONE, “feedbaaaaaack !!!!!!!!!” opens feedback modal |
+| **Feedback modal** | Optional name, optional email, message (max 254 chars) → Supabase `feedback` |
 
 ---
 
@@ -40,44 +28,38 @@ Translations live in `translations.js`; the page uses it for copy if you add loc
 npx serve . -p 3000
 ```
 
-Then open **http://localhost:3000**. No install or build required.
+Open **http://localhost:3000**. No install or build.
 
 ---
 
-## Add your video
+## Add your demo video
 
-1. Export your demo clip from Photos: right-click → **Export Unmodified Original**.
-2. Create an `assets/` folder next to `index.html`.
-3. Compress and add the file:
+1. Create an `assets/` folder next to `index.html`.
+2. Add a file named `demo.mp4` (or point the `<source src="...">` in `index.html` to your file).
+
+Optional compression:
 
 ```bash
-ffmpeg -i ~/Desktop/your-video.mov -vcodec h264 -crf 28 -preset slow -vf scale=1280:-2 assets/demo.mp4
+ffmpeg -i your-video.mov -vcodec h264 -crf 28 -preset slow -vf scale=1280:-2 assets/demo.mp4
 ```
-
-The player loads `assets/demo.mp4` automatically.
 
 ---
 
-## Connect email signups
+## Backend (Supabase)
 
-In `index.html`, find the `sub()` function and replace the localStorage logic with a request to your API:
+Signups and feedback are sent to **Supabase** via the REST API.
 
-```js
-await fetch('https://your-api.com/signup', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(entry),
-});
-```
+- **Tables:** `signups` (email, role, twitch, name), `feedback` (name, email, message).
+- In `index.html`, set `SUPABASE_URL` and `SUPABASE_KEY` (anon key) to your project. For production, use env or a small server so the key isn’t in the repo.
 
-**Quick options:** [Formspree](https://formspree.io) · [Supabase](https://supabase.com) · Google Sheets + Apps Script
+Honeypot, time-to-fill, and cooldowns are used to limit abuse.
 
 ---
 
 ## Discord & Telegram
 
-- In `index.html`, search for `discord.gg/YOUR_INVITE` and replace with your Discord invite (nav + CTA).
-- Replace `t.me/YOUR_USERNAME` with your Telegram handle for the CTA button.
+- **Discord:** Search for `discord.gg/` in `index.html` and replace with your invite (nav + CTA section).
+- **Telegram:** Search for `t.me/` and replace with your handle for the “DM us on Telegram” button.
 
 ---
 
@@ -85,9 +67,19 @@ await fetch('https://your-api.com/signup', {
 
 | Platform | How |
 |----------|-----|
-| **GitHub Pages** | Push to repo → Settings → Pages → source: `main` / root |
+| **GitHub Pages** | Push → Settings → Pages → source: main / root |
 | **Vercel** | `npx vercel` |
 | **Netlify** | Drag & drop the folder at [app.netlify.com/drop](https://app.netlify.com/drop) |
+
+---
+
+## Tech & behavior
+
+- **Fonts:** Google Fonts — Unbounded, Outfit, JetBrains Mono.
+- **Icons:** [Lucide](https://lucide.dev) (UMD from unpkg).
+- **Security:** CSP, X-Content-Type-Options, X-Frame-Options; viewport and theme-color set.
+- **A11y:** Skip link, focus styles, ARIA where needed, reduced-motion respected.
+- **Mobile:** Responsive breakpoints (768px, 480px, 380px), safe-area insets, 44px+ touch targets, single-column layout and stacked CTAs on small screens.
 
 ---
 
@@ -98,7 +90,7 @@ await fetch('https://your-api.com/signup', {
 | Variable | Default | Use |
 |----------|---------|-----|
 | `--ac` | `#8b5cf6` | Primary purple |
-| `--cy` | `#22d3ee` | Viewer cyan |
+| `--cy` | `#22d3ee` | Accent cyan |
 | `--gn` | `#34d399` | Trust green |
 
-**Copy** — All text is in the HTML (and `translations.js` if you use it). Edit in place; no CMS.
+**Copy** — All text is in the HTML; edit in place.
