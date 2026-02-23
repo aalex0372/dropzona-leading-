@@ -69,6 +69,35 @@ Signups and feedback are sent to **Supabase** via the REST API.
 - **Tables:** `signups` (email, role, twitch, name), `feedback` (name, email, message).
 - Credentials live in `config.js` (see [Config](#config-required--keep-secrets-out-of-the-repo)); the repo only has `config.example.js`.
 
+**Create the tables and allow inserts (Supabase SQL editor):**
+
+```sql
+-- signups (for streamer beta + viewer waitlist)
+create table if not exists signups (
+  id uuid primary key default gen_random_uuid(),
+  email text not null,
+  role text not null,
+  twitch text,
+  name text,
+  created_at timestamptz default now()
+);
+alter table signups enable row level security;
+create policy "Allow anon insert" on signups for insert to anon with check (true);
+
+-- feedback (for footer feedback form)
+create table if not exists feedback (
+  id uuid primary key default gen_random_uuid(),
+  name text,
+  email text,
+  message text not null,
+  created_at timestamptz default now()
+);
+alter table feedback enable row level security;
+create policy "Allow anon insert" on feedback for insert to anon with check (true);
+```
+
+Without these tables and RLS policies, inserts from the site will fail (403 or missing table).
+
 Honeypot, time-to-fill, and cooldowns are used to limit abuse.
 
 ---

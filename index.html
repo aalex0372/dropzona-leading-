@@ -500,6 +500,7 @@ footer{position:relative;z-index:2;border-top:none;padding:16px 28px;background:
           </div>
           <div class="su-err" id="fbMessageErr" style="margin-top:-6px">Please write something before sending.</div>
 
+          <div class="su-err" id="fbNetworkErr" style="display:none;margin-bottom:8px"></div>
           <div class="fb-footer">
             <button type="submit" class="btn btn-str fb-submit" id="fbSubmitBtn">
               <i data-lucide="send" aria-hidden="true"></i> Send feedback
@@ -544,6 +545,7 @@ async function supaInsert(table, payload) {
     method: 'POST',
     headers: {
       'Content-Type':  'application/json',
+      'Accept':        'application/json',
       'apikey':        SUPABASE_KEY,
       'Authorization': 'Bearer ' + SUPABASE_KEY,
       'Prefer':        'return=minimal'
@@ -680,20 +682,31 @@ async function supaInsert(table, payload) {
       var fbName = sanitize(document.getElementById('fbName').value, 128);
       var payload = { name: fbName || null, email: fbEmailVal || null, message: msg };
 
+      var netErr = document.getElementById('fbNetworkErr');
+      if (netErr) { netErr.style.display = 'none'; netErr.textContent = ''; }
+
       // ⑥ Send to `feedback` table
       try {
         var res = await supaInsert('feedback', payload);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        if (!res.ok) {
+          var errText = await res.text();
+          console.error('feedback API error:', res.status, errText);
+          if (netErr) { netErr.textContent = 'Couldn\'t send — try again or DM us on Telegram.'; netErr.style.display = 'block'; }
+          if (sb) { sb.disabled = false; sb.style.opacity = '1'; }
+          _fbSend = false;
+          return false;
+        }
+        localStorage.setItem(cdKey, Date.now().toString());
+        _showFbOk();
       } catch (err) {
         console.error('feedback error:', err);
-        // Fallback: save to localStorage so message is not lost
+        if (netErr) { netErr.textContent = 'Network error — try again or DM us on Telegram.'; netErr.style.display = 'block'; }
+        if (sb) { sb.disabled = false; sb.style.opacity = '1'; }
+        _fbSend = false;
         try { localStorage.setItem('dz_fb_unsent', JSON.stringify({ ts: Date.now(), name: payload.name, email: payload.email, message: payload.message })); } catch (_) {}
+        return false;
       }
-
-      localStorage.setItem(cdKey, Date.now().toString());
-      if (sb) { sb.disabled = false; sb.style.opacity = '1'; }
       _fbSend = false;
-      _showFbOk();
       return false;
     });
 
