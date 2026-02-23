@@ -11,10 +11,8 @@
     font-src https://fonts.gstatic.com;
     img-src 'self' data:;
     connect-src 'self' https://*.supabase.co;
-    frame-ancestors 'none';
-  "/>
+  ">
   <meta http-equiv="X-Content-Type-Options" content="nosniff"/>
-  <meta http-equiv="X-Frame-Options" content="DENY"/>
   <title>DROPZONE — Real-Time Stream Drops for Skill Moments (CS2 first)</title>
   <meta name="description" content="Automated drops for stream highlights. CS2 first — more games & event types coming. Powered by the streamer’s own inventory."/>
   <meta property="og:title" content="Real-time drops for skill moments and highlights."/>
@@ -416,7 +414,7 @@ footer{position:relative;z-index:2;border-top:none;padding:16px 28px;background:
       <div class="su-card reveal">
         <div class="su-head">
           <div class="su-ico pu"><i data-lucide="radio" aria-hidden="true"></i></div>
-          <div><div class="su-tit">Streamer Beta</div><div class="su-desc">Early access + setup help</div></div>
+          <div><div class="su-tit">User Beta</div><div class="su-desc">Early access + setup help</div></div>
         </div>
         <form class="su-form" id="sForm" onsubmit="return sub(event,'streamer')">
           <!-- HONEYPOT -->
@@ -612,6 +610,8 @@ async function supaInsert(table, payload) {
       ['fbEmailErr','fbMessageErr'].forEach(function(id) { var er = document.getElementById(id); if (er) er.classList.remove('show'); });
       var cc = document.getElementById('fbMessageCount'); if (cc) { cc.textContent = '0 / 254'; cc.classList.remove('at-limit'); }
       var sb = document.getElementById('fbSubmitBtn'); if (sb) { sb.disabled = false; sb.style.opacity = '1'; }
+      var netErr = document.getElementById('fbNetworkErr'); if (netErr) { netErr.style.display = 'none'; netErr.textContent = ''; }
+      window._feedbackOpenTime = Date.now();
       fbBackdrop.classList.add('open'); fbBackdrop.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
       setTimeout(function () { if (fbClose) fbClose.focus(); }, 50);
@@ -655,8 +655,12 @@ async function supaInsert(table, payload) {
       var hp = feedbackForm.querySelector('input[name="url"]');
       if (hp && hp.value.length > 0) { _showFbOk(); return false; }
 
-      // ② Time-to-fill < 2s → likely bot
-      if (Date.now() - (window._formRenderTime || 0) < 2000) return false;
+      // ② Time-to-fill < 2s from opening modal → likely bot
+      var netErrEl = document.getElementById('fbNetworkErr');
+      if (Date.now() - (window._feedbackOpenTime || 0) < 2000) {
+        if (netErrEl) { netErrEl.textContent = 'Please wait a moment before sending.'; netErrEl.style.display = 'block'; }
+        return false;
+      }
 
       // ③ Cooldown 30 min
       var cdKey = 'dz_fb_cd', last = parseInt(localStorage.getItem(cdKey) || '0');
@@ -691,7 +695,8 @@ async function supaInsert(table, payload) {
         if (!res.ok) {
           var errText = await res.text();
           console.error('feedback API error:', res.status, errText);
-          if (netErr) { netErr.textContent = 'Couldn\'t send — try again or DM us on Telegram.'; netErr.style.display = 'block'; }
+          var errMsg = res.status === 0 ? 'Server not configured. Try again later or contact us.' : 'Couldn\'t send — try again or DM us on Telegram.';
+          if (netErr) { netErr.textContent = errMsg; netErr.style.display = 'block'; }
           if (sb) { sb.disabled = false; sb.style.opacity = '1'; }
           _fbSend = false;
           return false;
@@ -743,12 +748,12 @@ async function sub(e, role) {
   var cdKey = 'dz_sent_' + role, last = parseInt(localStorage.getItem(cdKey) || '0');
   if (last && (Date.now() - last) < 3600000) { showSuccess(form, role); return false; }
 
-  // ④ Validate
+  // ④ Validate — only read fields for the current role so streamer Twitch never goes into viewer rows
   var valid = true;
   var emailId = role === 'streamer' ? 'sEmail' : 'vEmail';
   var em   = sanitize(document.getElementById(emailId).value, 128).toLowerCase();
-  var tw   = sanitize(document.getElementById('sTwitch') ? document.getElementById('sTwitch').value : '', 64);
-  var name = sanitize(document.getElementById('vName')   ? document.getElementById('vName').value   : '', 64);
+  var tw   = role === 'streamer' ? sanitize(document.getElementById('sTwitch') ? document.getElementById('sTwitch').value : '', 64) : '';
+  var name = role === 'viewer'   ? sanitize(document.getElementById('vName')   ? document.getElementById('vName').value   : '', 64) : '';
 
   if (!/^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/.test(em)) { fieldErr(emailId); valid = false; } else { fieldOk(emailId); }
   if (role === 'streamer') { if (tw.length < 2) { fieldErr('sTwitch'); valid = false; } else { fieldOk('sTwitch'); } }
@@ -760,9 +765,11 @@ async function sub(e, role) {
   var btn = form.querySelector('button[type=submit]');
   if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
 
-  // ⑥ Send to `signups` table
+  // ⑥ Send to `signups` table — role stored as CTA label: "User Beta" | "Viewer Waitlist"
+  var roleValue = role === 'streamer' ? 'User Beta' : 'Viewer Waitlist';
   try {
-    var res = await supaInsert('signups', { email: em, role: role, twitch: tw || null, name: name || null });
+    var payload = { email: em, role: roleValue, twitch: role === 'streamer' ? (tw || null) : null, name: role === 'viewer' ? (name || null) : null };
+    var res = await supaInsert('signups', payload);
     // 409 = duplicate (UNIQUE) — show success anyway
     if (!res.ok && res.status !== 409) throw new Error('HTTP ' + res.status);
   } catch (err) {
@@ -770,14 +777,14 @@ async function sub(e, role) {
     if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
     _submitting[role] = false;
     var errDiv = form.querySelector('.su-network-err');
-    if (!errDiv) {
+    if (!errDiv && btn && btn.parentNode) {
       errDiv = document.createElement('div');
       errDiv.className = 'su-err show su-network-err';
       errDiv.style.textAlign = 'center';
       errDiv.style.marginTop = '4px';
       btn.parentNode.insertBefore(errDiv, btn.nextSibling);
     }
-    errDiv.textContent = 'Something went wrong — please try again.';
+    if (errDiv) errDiv.textContent = (err.message && err.message.indexOf('HTTP 0') !== -1) ? 'Server not configured. Try again later or contact us.' : 'Something went wrong — please try again.';
     return false;
   }
 
@@ -787,8 +794,8 @@ async function sub(e, role) {
 }
 
 function showSuccess(form, role) {
-  var title   = role === 'streamer' ? "You're in!" : "You're in!";
-  var subtext = role === 'streamer' ? "We'll reach out within 48h." : "One email at launch.";
+  var title   = "You're in!";
+  var subtext = role === 'streamer' ? "We'll reach out within 48h (User Beta)." : "One email at launch (Viewer Waitlist).";
   var ok = document.createElement('div'); ok.className = 'su-ok';
   ok.innerHTML = '<div class="su-ok-i"><i data-lucide="check"></i></div><div class="su-ok-t">' + title + '</div><div class="su-ok-s">' + subtext + '</div>';
   form.style.display = 'none';
