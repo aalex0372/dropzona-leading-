@@ -414,7 +414,7 @@ footer{position:relative;z-index:2;border-top:none;padding:16px 28px;background:
       <div class="su-card reveal">
         <div class="su-head">
           <div class="su-ico pu"><i data-lucide="radio" aria-hidden="true"></i></div>
-          <div><div class="su-tit">User Beta</div><div class="su-desc">Early access + setup help</div></div>
+          <div><div class="su-tit">Streamer Beta</div><div class="su-desc">Early access + setup help</div></div>
         </div>
         <form class="su-form" id="sForm" onsubmit="return sub(event,'streamer')">
           <!-- HONEYPOT -->
@@ -765,10 +765,9 @@ async function sub(e, role) {
   var btn = form.querySelector('button[type=submit]');
   if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
 
-  // ⑥ Send to `signups` table — role stored as CTA label: "User Beta" | "Viewer Waitlist"
-  var roleValue = role === 'streamer' ? 'User Beta' : 'Viewer Waitlist';
+  // ⑥ Send to `signups` table — role must be 'streamer' or 'viewer' (DB constraint)
   try {
-    var payload = { email: em, role: roleValue, twitch: role === 'streamer' ? (tw || null) : null, name: role === 'viewer' ? (name || null) : null };
+    var payload = { email: em, role: role, twitch: role === 'streamer' ? (tw || null) : null, name: role === 'viewer' ? (name || null) : null };
     var res = await supaInsert('signups', payload);
     // 409 = duplicate (UNIQUE) — show success anyway
     if (!res.ok && res.status !== 409) throw new Error('HTTP ' + res.status);
@@ -794,8 +793,8 @@ async function sub(e, role) {
 }
 
 function showSuccess(form, role) {
-  var title   = "You're in!";
-  var subtext = role === 'streamer' ? "We'll reach out within 48h (User Beta)." : "One email at launch (Viewer Waitlist).";
+  var title   = role === 'streamer' ? "You're in!" : "You're in!";
+  var subtext = role === 'streamer' ? "We'll reach out within 48h." : "One email at launch.";
   var ok = document.createElement('div'); ok.className = 'su-ok';
   ok.innerHTML = '<div class="su-ok-i"><i data-lucide="check"></i></div><div class="su-ok-t">' + title + '</div><div class="su-ok-s">' + subtext + '</div>';
   form.style.display = 'none';
