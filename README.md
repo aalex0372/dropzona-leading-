@@ -22,9 +22,26 @@ Landing page for **DROPZONE** — real-time stream drops for skill moments and h
 
 ---
 
+## Config (required — keep secrets out of the repo)
+
+Supabase URL and anon key are **not** in the repo. You provide them via `config.js`:
+
+1. Copy the example: `cp config.example.js config.js`
+2. Edit `config.js` and set your Supabase project URL and anon key.
+3. **Never commit `config.js`** — it’s in `.gitignore`. Only `config.example.js` is committed.
+
+Without `config.js`, signup and feedback forms will not submit (no keys = no API calls).
+
+**Deploy on Vercel:** The repo includes a build step. In the Vercel project, add **Environment Variables**: `SUPABASE_URL` and `SUPABASE_ANON_KEY`. On each deploy, `node scripts/build-config.js` runs and generates `config.js` from these env vars. No need to commit or manually create `config.js`.
+
+**Other hosts (Netlify, GitHub Actions):** Run `node scripts/build-config.js` in your build and set the same env vars.
+
+---
+
 ## Quick start
 
 ```bash
+cp config.example.js config.js   # then edit config.js with your Supabase URL + anon key
 npx serve . -p 3000
 ```
 
@@ -50,7 +67,7 @@ ffmpeg -i your-video.mov -vcodec h264 -crf 28 -preset slow -vf scale=1280:-2 ass
 Signups and feedback are sent to **Supabase** via the REST API.
 
 - **Tables:** `signups` (email, role, twitch, name), `feedback` (name, email, message).
-- In `index.html`, set `SUPABASE_URL` and `SUPABASE_KEY` (anon key) to your project. For production, use env or a small server so the key isn’t in the repo.
+- Credentials live in `config.js` (see [Config](#config-required--keep-secrets-out-of-the-repo)); the repo only has `config.example.js`.
 
 Honeypot, time-to-fill, and cooldowns are used to limit abuse.
 
@@ -67,9 +84,9 @@ Honeypot, time-to-fill, and cooldowns are used to limit abuse.
 
 | Platform | How |
 |----------|-----|
-| **GitHub Pages** | Push → Settings → Pages → source: main / root |
-| **Vercel** | `npx vercel` |
-| **Netlify** | Drag & drop the folder at [app.netlify.com/drop](https://app.netlify.com/drop) |
+| **Vercel** | Connect repo → set env vars `SUPABASE_URL`, `SUPABASE_ANON_KEY` → Deploy. Build runs `node scripts/build-config.js` (see `vercel.json`). |
+| **GitHub Pages** | Use Actions to run the build script with secrets, then publish the output. |
+| **Netlify** | Build command: `node scripts/build-config.js`; set same env vars in Netlify UI. |
 
 ---
 

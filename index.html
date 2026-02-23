@@ -10,7 +10,7 @@
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src https://fonts.gstatic.com;
     img-src 'self' data:;
-    connect-src 'self' https://gtesofdrerksdzzyfryh.supabase.co;
+    connect-src 'self' https://*.supabase.co;
     frame-ancestors 'none';
   "/>
   <meta http-equiv="X-Content-Type-Options" content="nosniff"/>
@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;800;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js" defer></script>
 <style>
 :root{
   --ac:#8b5cf6;--ac2:#7c3aed;--ac-g:rgba(139,92,246,.25);--ac-s:rgba(139,92,246,.06);--ac-s2:rgba(139,92,246,.12);
@@ -482,7 +482,7 @@ footer{position:relative;z-index:2;border-top:none;padding:16px 28px;background:
       <div id="feedbackFormWrap">
         <p class="fb-desc">We're not launched yet — your thoughts help us build.</p>
         <form class="fb-form" id="feedbackForm" novalidate>
-          <!-- HONEYPOT — скрыто от людей, видно ботам -->
+          <!-- Honeypot (hidden from users, visible to bots) -->
           <input type="text" name="url" class="visually-hidden" tabindex="-1" autocomplete="off" aria-hidden="true"/>
 
           <label for="fbName" class="visually-hidden">Name (optional)</label>
@@ -490,7 +490,7 @@ footer{position:relative;z-index:2;border-top:none;padding:16px 28px;background:
 
           <label for="fbEmail" class="visually-hidden">Email — if you'd like a reply (optional)</label>
           <input type="email" class="su-in" id="fbEmail" placeholder="Email — if you'd like a reply (optional)" autocomplete="email" maxlength="128"/>
-          <!-- inline ошибка для необязательного email -->
+          <!-- Inline error for optional email -->
           <div class="su-err" id="fbEmailErr" style="margin-top:-6px">Please enter a valid email address.</div>
 
           <label for="fbMessage" class="visually-hidden">Your message</label>
@@ -517,12 +517,13 @@ footer{position:relative;z-index:2;border-top:none;padding:16px 28px;background:
   </div>
 </div>
 
+<script src="config.js"></script>
 <script>
 // ════════════════════════════════════════════
-//  SHARED CONFIG & HELPERS
+//  SHARED CONFIG & HELPERS (URL + key from config.js — never commit config.js)
 // ════════════════════════════════════════════
-var SUPABASE_URL = 'https://gtesofdrerksdzzyfryh.supabase.co';
-var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0ZXNvZmRyZXJrc2R6enlmcnloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NDQ3ODMsImV4cCI6MjA4NzQyMDc4M30.Cli8aYRL8-izPw-sNzGM2JvBInp13uF4ctXcdgRiVzw';
+var SUPABASE_URL = window.SUPABASE_URL || '';
+var SUPABASE_KEY = window.SUPABASE_ANON_KEY || '';
 
 function sanitize(v, max) {
   return String(v || '').trim().replace(/[<>"'`]/g, '').substring(0, max || 256);
@@ -538,6 +539,7 @@ function fieldOk(id) {
   if (er) er.classList.remove('show');
 }
 async function supaInsert(table, payload) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return Promise.resolve({ ok: false, status: 0 });
   return fetch(SUPABASE_URL + '/rest/v1/' + table, {
     method: 'POST',
     headers: {
@@ -598,7 +600,7 @@ async function supaInsert(table, payload) {
 
     function openFb() {
       fbLastFocus = document.activeElement;
-      // Сброс формы при каждом открытии
+      // Reset form on open
       var fw = document.getElementById('feedbackFormWrap'), fs = document.getElementById('feedbackSuccess');
       if (fw) fw.style.display = '';
       if (fs) fs.style.display = 'none';
@@ -651,14 +653,14 @@ async function supaInsert(table, payload) {
       var hp = feedbackForm.querySelector('input[name="url"]');
       if (hp && hp.value.length > 0) { _showFbOk(); return false; }
 
-      // ② Time-to-fill < 2s → бот (пользователь физически не успеет написать осмысленный текст)
+      // ② Time-to-fill < 2s → likely bot
       if (Date.now() - (window._formRenderTime || 0) < 2000) return false;
 
-      // ③ Cooldown 30 мин
+      // ③ Cooldown 30 min
       var cdKey = 'dz_fb_cd', last = parseInt(localStorage.getItem(cdKey) || '0');
       if (last && (Date.now() - last) < 30 * 60 * 1000) { _showFbOk(); return false; }
 
-      // ④ Валидация
+      // ④ Validate
       var valid = true;
       var msg = sanitize(document.getElementById('fbMessage').value, 254);
       if (msg.length < 3) { fieldErr('fbMessage'); valid = false; } else { fieldOk('fbMessage'); }
@@ -670,7 +672,7 @@ async function supaInsert(table, payload) {
 
       if (!valid) return false;
 
-      // ⑤ Блокируем кнопку
+      // ⑤ Disable button
       _fbSend = true;
       var sb = document.getElementById('fbSubmitBtn');
       if (sb) { sb.disabled = true; sb.style.opacity = '0.6'; }
@@ -678,13 +680,13 @@ async function supaInsert(table, payload) {
       var fbName = sanitize(document.getElementById('fbName').value, 128);
       var payload = { name: fbName || null, email: fbEmailVal || null, message: msg };
 
-      // ⑥ Отправка в таблицу `feedback`
+      // ⑥ Send to `feedback` table
       try {
         var res = await supaInsert('feedback', payload);
         if (!res.ok) throw new Error('HTTP ' + res.status);
       } catch (err) {
         console.error('feedback error:', err);
-        // Fallback: сохраняем в localStorage чтобы не потерять сообщение
+        // Fallback: save to localStorage so message is not lost
         try { localStorage.setItem('dz_fb_unsent', JSON.stringify({ ts: Date.now(), name: payload.name, email: payload.email, message: payload.message })); } catch (_) {}
       }
 
@@ -701,7 +703,7 @@ async function supaInsert(table, payload) {
       if (fs) { fs.style.display = 'block'; if (window.lucide) lucide.createIcons(); }
     }
 
-    // Время рендера — для time-to-fill защиты
+    // Form render time for time-to-fill bot check
     window._formRenderTime = Date.now();
   });
 })();
@@ -721,14 +723,14 @@ async function sub(e, role) {
   var hp = form.querySelector('input[name="website"]');
   if (hp && hp.value.length > 0) return false;
 
-  // ② Time-to-fill < 1.5s
+  // ② Time-to-fill < 1.5s (bot check)
   if (Date.now() - (window._formRenderTime || 0) < 1500) return false;
 
-  // ③ Cooldown 1h
+  // ③ Cooldown 1 hour
   var cdKey = 'dz_sent_' + role, last = parseInt(localStorage.getItem(cdKey) || '0');
   if (last && (Date.now() - last) < 3600000) { showSuccess(form, role); return false; }
 
-  // ④ Валидация
+  // ④ Validate
   var valid = true;
   var emailId = role === 'streamer' ? 'sEmail' : 'vEmail';
   var em   = sanitize(document.getElementById(emailId).value, 128).toLowerCase();
@@ -740,15 +742,15 @@ async function sub(e, role) {
   if (role === 'viewer')   { if (name.length < 2) { fieldErr('vName'); valid = false; } else { fieldOk('vName'); } }
   if (!valid) return false;
 
-  // ⑤ Блокируем
+  // ⑤ Lock submit
   _submitting[role] = true;
   var btn = form.querySelector('button[type=submit]');
   if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
 
-  // ⑥ Отправка → таблица `signups`
+  // ⑥ Send to `signups` table
   try {
     var res = await supaInsert('signups', { email: em, role: role, twitch: tw || null, name: name || null });
-    // 409 = дубликат (UNIQUE constraint) — показываем success без ошибки
+    // 409 = duplicate (UNIQUE) — show success anyway
     if (!res.ok && res.status !== 409) throw new Error('HTTP ' + res.status);
   } catch (err) {
     console.error('signup error:', err);
