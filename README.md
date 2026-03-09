@@ -1,6 +1,6 @@
-# DROPZONE
+# DROPZONA
 
-Landing page for **DROPZONE** — real-time stream drops for skill moments and highlights. Twitch Drops meets CS2 (and more games later); powered by the streamer’s own inventory.
+Landing page for **DROPZONA** — real-time stream drops for skill moments and highlights. Twitch Drops meets CS2 (and more games later); streamers give away skins via our platform, connected to a skin market.
 
 **Single-file setup:** one `index.html`, no framework, no build step. Responsive for desktop and all phone sizes and orientations.
 
@@ -13,11 +13,11 @@ Landing page for **DROPZONE** — real-time stream drops for skill moments and h
 | **Hero** | “Closed Beta” badge, headline “Twitch Drops for skill moments and highlights.”, subline, two CTAs (Streamer — Join Beta / Viewer — Get Notified), stats (Free, &lt;3s, Yours) |
 | **Demo video** | 16:9 player; `assets/demo.mp4` autoplays muted loop; click to unmute/play |
 | **How it works** | 3 steps: Trigger Fires → Winner Picked → Skin Traded |
-| **Trust & Safety** | “This is NOT gambling” — no purchase, streamer’s inventory, provably fair selection |
+| **Trust & Safety** | “This is NOT gambling” — no purchase, streamer funds drops, provably fair selection |
 | **Join CTA** | Discord + Telegram buttons, then two signup cards |
 | **Streamer Beta** | Twitch channel + email → Supabase `signups` (role: streamer) |
 | **Viewer Waitlist** | Name + email → Supabase `signups` (role: viewer) |
-| **Footer** | © DROPZONE, “feedbaaaaaack !!!!!!!!!” opens feedback modal |
+| **Footer** | © DROPZONA, “feedbaaaaaack !!!!!!!!!” opens feedback modal |
 | **Feedback modal** | Optional name, optional email, message (max 254 chars) → Supabase `feedback` |
 
 ---
